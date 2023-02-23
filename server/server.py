@@ -50,23 +50,21 @@ class Request_handler(BaseHTTPRequestHandler):
         dock = Dock()
         self.docks[dock.get_id] = dock
         print(dock.get_id())
+        return dock.get_id()
 
     def do_GET(self):
         self.send_response(200)
         tokens = self.path.split("/")
-        print(tokens)
+        response = None
         if tokens[1] == "request-init":
-            self.request_init(tokens[2:])
+            response = self.request_init(tokens[2:])
         elif tokens[1] in self.docks.keys():
-            responses = self.docks[tokens[1]].process_request(tokens[2:])
+            response = self.docks[tokens[1]].process_request(tokens[2:])
+        
         self.send_header("Content-type", "text/html")
-        self.end_headers()
-        self.wfile.write(bytes(self.path, "utf-8"))
-        # self.wfile.write(bytes("<html><head><title>https://pythonbasics.org</title></head>", "utf-8"))
-        # self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
-        # self.wfile.write(bytes("<body>", "utf-8"))
-        # self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
-        # self.wfile.write(bytes("</body></html>", "utf-8"))
+        self.end_headers()  
+        if not response is None:
+            self.wfile.write(bytes(response, "utf-8"))
         print("got path", self.path)
 
 class Server():
