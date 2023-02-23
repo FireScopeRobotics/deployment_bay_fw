@@ -5,22 +5,42 @@
 #include <WiFiClient.h>
 
 ESP8266WiFiMulti wifiMulti;     // Create an instance of the ESP8266WiFiMulti class, called 'wifiMulti'
-String serverName = "http://localhost:8080//update-sensor";
+String serverName = "http://192.168.39.113:42069//update-sensor";
 
 #define LED 2
 const char* ssid = "TP-LINK_783E72";
 const char* password = "24842488";
+
+const char* ssid2 = "Frank_Mesh";
+const char* password2 = "Llin2014";
 
 uint8_t LED_STATUS;
 
 unsigned long lastTime = 0;
 unsigned long timerDelay = 5000;
 
+String init_req(String cmd){
+  String command = serverName + "/" +cmd;
+  return command;
+}
+
+void add_param_req(String& cmd, String param, String val){
+  cmd += "/";
+  cmd += param;
+  if (val.length() > 0){
+    cmd += "-";
+    cmd += val;
+  }
+}
+
+
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(LED, OUTPUT);
   wifiMulti.addAP(ssid, password);   // add Wi-Fi networks you want to connect to
+  wifiMulti.addAP(ssid2, password2);   // add Wi-Fi networks you want to connect to
   Serial.println("Connecting ...");
 
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
@@ -57,14 +77,11 @@ void loop() {
       WiFiClient client;
       HTTPClient http;
 
-      String serverPath = serverName + "?temperature=24.37";
+      String request = init_req("heartbeat");
       
       // Your Domain name with URL path or IP address with path
-      http.begin(client, serverPath.c_str());
+      http.begin(client, request);
   
-      // If you need Node-RED/server authentication, insert user and password below
-      //http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
-        
       // Send HTTP GET request
       int httpResponseCode = http.GET();
       

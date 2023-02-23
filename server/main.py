@@ -1,6 +1,6 @@
 from server import Server
 
-hostName = "localhost"
+hostName = ""
 serverPort = 42069
 
 if __name__ == "__main__":        
