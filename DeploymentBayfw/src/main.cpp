@@ -20,7 +20,8 @@ typedef enum
 { 
     IDLE, 
     UNDOCKING, 
-    DOCKING 
+    DOCKING,
+    ERROR
 } dock_status;
 
 //wifi passwords
@@ -37,7 +38,8 @@ Task led_blink_t(1000, TASK_FOREVER, &led_blink);
 void heartbeat(); //heartbeat generater request receiver
 Task heartbeat_t(500, TASK_FOREVER, &heartbeat);
 void ledstrip();
-Task ledstrip_t(25, TASK_FOREVER, &ledstrip);
+#define led_period 25
+Task ledstrip_t(led_period, TASK_FOREVER, &ledstrip);
 
 //fw variables
 String serial_code = "";
@@ -60,6 +62,7 @@ Adafruit_NeoPixel strip1 = Adafruit_NeoPixel(60, CTRL_PIN1, NEO_GRB + NEO_KHZ800
 struct led_status_s{
   dock_status status;
   int pixel_var;
+  int8_t sign;
 };
 led_status_s led_status;
 
@@ -171,29 +174,42 @@ void heartbeat(){
     }
     else {
       Serial.println("WiFi Disconnected");
+
     }
 }
 
 void ledstrip(){
-  // int i;
-  // for (i = 0; i<32; i++)
-  // {
-  //    strip1.setPixelColor(i, strip1.Color(0, 150+i, 0));
-  // }
+
   switch (led_status.status){
     case (IDLE):
       for( int i=0; i < num_pixels_strip1; i++) {
         strip1.setPixelColor(i, strip1.Color(0, 0, led_status.pixel_var));
       }
-      led_status.pixel_var += 1;
-      if (led_status.pixel_var > 255){
-        led_status.pixel_var = led_status.pixel_var%255;
+      led_status.pixel_var += 1*led_status.sign;
+      if (led_status.pixel_var >= 255){
+        led_status.sign = -1;
+      }
+      else if (led_status.pixel_var <= 0){
+        led_status.sign = 1;
       }
       break;
     case (UNDOCKING):
       for(int i=0; i< num_pixels_strip1; i++) {
         strip1.setPixelColor(i, strip1.Color(0, 150+i, 0));
       }
+      break;
+
+    case (ERROR):
+      int ticks = int(500/led_period);
+      if (led_status.pixel_var > ticks){
+        for(int i=0; i< num_pixels_strip1; i++) {
+          strip1.setPixelColor(i, strip1.Color(125 + led_status.sign*125 , 0, 0));
+        }
+        led_status.pixel_var = 0;
+        if (led_status.sign == 1) led_status.sign = -1;
+        else if (led_status.sign == -1) led_status.sign = 1;
+      }
+      led_status.pixel_var++;
       break;
 
   }
@@ -237,12 +253,17 @@ void add_param_req(String& cmd, String param, String val){
   }
 }
 void change_LED_status(dock_status status){
-  led_status.status = IDLE;
+  led_status.status = status;
   switch (status){
     case (IDLE):
       led_status.pixel_var = 0;
+      led_status.sign = 1;
       break;
     case (UNDOCKING):
       led_status.pixel_var = 0;
+      led_status.sign = 1;
+    case (ERROR):
+      led_status.pixel_var = 0;
+      led_status.sign = 1;
   }
 }
