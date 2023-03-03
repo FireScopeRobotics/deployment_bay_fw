@@ -5,13 +5,15 @@
 #include <WiFiClient.h>
 #include <TaskScheduler.h>
 #include <Adafruit_NeoPixel.h>
+#include <vector>
+#include <string>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
 //path to the server, change depending on the ip address of the server
 ESP8266WiFiMulti wifiMulti;     // Create an instance of the ESP8266WiFiMulti class, called 'wifiMulti'
-String serverName = "http://192.168.39.113:42069";
+String serverName = "http://192.168.0.101:42069";
 
 //pinout definitions
 #define LED 2
@@ -21,7 +23,9 @@ typedef enum
     IDLE, 
     UNDOCKING, 
     DOCKING,
-    ERROR
+    OPERATING,
+    NETWORK_ERROR,
+    ERROR,
 } dock_status;
 
 //wifi passwords
@@ -34,7 +38,7 @@ bool LED_STATUS;
 
 //tasks
 void led_blink(); //test/stayalive task
-Task led_blink_t(1000, TASK_FOREVER, &led_blink);
+Task led_blink_t(400, TASK_FOREVER, &led_blink);
 void heartbeat(); //heartbeat generater request receiver
 Task heartbeat_t(500, TASK_FOREVER, &heartbeat);
 void ledstrip();
@@ -51,7 +55,7 @@ Scheduler runner;
 String init_req(String cmd);
 void add_param_req(String& cmd, String param, String val);
 void change_LED_status(dock_status status);
-uint32_t Wheel(byte WheelPos);
+std::vector<std::string> spitString(std::string str, std::string key);
 
 //colorstrip
 #define CTRL_PIN1 4 //D2
@@ -63,6 +67,8 @@ struct led_status_s{
   dock_status status;
   int pixel_var;
   int8_t sign;
+  int vars [num_pixels_strip1]; 
+  int8_t signs [num_pixels_strip1];
 };
 led_status_s led_status;
 
@@ -94,7 +100,7 @@ void setup() {
     if(WiFi.status()== WL_CONNECTED){
       WiFiClient client;
       HTTPClient http;
-      String request = init_req("request-init");
+      String request = serverName + "/" + "request-init";
         
       // Your Domain name with URL path or IP address with path
       http.begin(client, request);
@@ -122,7 +128,9 @@ void setup() {
   strip1.begin();
   strip1.setBrightness(64);
   strip1.show(); // Initialize all pixels to 'off'
-  change_LED_status(IDLE);
+  // change_LED_status(IDLE);
+  change_LED_status(UNDOCKING);
+
 
   //add tasks to scheduler
   runner.addTask(led_blink_t);
@@ -164,10 +172,35 @@ void heartbeat(){
         Serial.println(httpResponseCode);
         String payload = http.getString();
         Serial.println(payload);
+        std::string payld = payload.c_str();
+        Serial.println(payld.size());
+        if (payld.size() > 1){
+          std::vector tokens = spitString(payld, std::string("-"));
+        
+          if (led_status.status == NETWORK_ERROR){
+            change_LED_status(IDLE);
+          }
+
+          if (tokens[0] == "OpenDoor"){
+          }
+          else if (tokens[0] == "SwtichLights"){
+            Serial.println(tokens[1].size());
+            Serial.println(tokens[1] == "IDLE");
+            if (tokens[1] == "IDLE") {change_LED_status(IDLE); Serial.println("here");}
+            else if (tokens[1] == "UNDOCKING") change_LED_status(UNDOCKING);
+            else if (tokens[1] == "DOCKING") change_LED_status(DOCKING);
+            else if (tokens[1] == "OPERATING") change_LED_status(OPERATING);
+            else if (tokens[1] == "ERROR") change_LED_status(ERROR);
+          }
+        }
+
       }
       else {
         Serial.print("Error code: ");
         Serial.println(httpResponseCode);
+        if (led_status.status != NETWORK_ERROR){
+          change_LED_status(NETWORK_ERROR);
+        }
       }
       // Free resources
       http.end();
@@ -176,6 +209,8 @@ void heartbeat(){
       Serial.println("WiFi Disconnected");
 
     }
+
+    //ESP.restart()
 }
 
 void ledstrip(){
@@ -194,11 +229,26 @@ void ledstrip(){
       }
       break;
     case (UNDOCKING):
-      for(int i=0; i< num_pixels_strip1; i++) {
-        strip1.setPixelColor(i, strip1.Color(0, 150+i, 0));
+    case (DOCKING):
+    {
+
+      for( int i=0; i < num_pixels_strip1; i++) {
+        strip1.setPixelColor(i,  strip1.Color(0, led_status.vars[i], 0));
+        led_status.vars[i] += 255/num_pixels_strip1*led_status.signs[i]*2;
+        if (led_status.vars[i] >= 255){
+          led_status.signs[i] = -1;
+          led_status.vars[i] = 255;
+        }
+        else if (led_status.vars[i] <= 0){
+          led_status.signs[i] = 1;
+          led_status.vars[i] = 0;
+        }
       }
+
       break;
 
+    }
+    case (NETWORK_ERROR):
     case (ERROR):
       int ticks = int(500/led_period);
       if (led_status.pixel_var > ticks){
@@ -214,33 +264,32 @@ void ledstrip(){
 
   }
   strip1.show();
-  // uint16_t i, j;
-  // for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
-  //   for(i=0; i< strip1.numPixels(); i++) {
-  //     strip1.setPixelColor(i, Wheel(((i * 256 / strip1.numPixels()) + j) & 255));
-  //   }
-  //   strip1.show();
-  // }
-}
-
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if(WheelPos < 85) {
-    return strip1.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if(WheelPos < 170) {
-    WheelPos -= 85;
-    return strip1.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return strip1.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
 
 //helpers
+std::vector<std::string> spitString(std::string str, std::string key)
+{
+    const std::string WHITESPACE = " \n\r\t\f\v";
+    std::vector<std::string> tokens;
+
+    size_t start = str.find_first_not_of(WHITESPACE);
+    size_t end = str.find_last_not_of(WHITESPACE);
+    std::string wrking = str.substr(start, end+1); //trim whitespace
+    // std::string wrking = str;
+    while (wrking.find(key) != std::string::npos){
+        auto pos = wrking.find(key);
+        
+        tokens.push_back(wrking.substr(0, pos));
+        wrking.erase(0, pos + key.length());
+    }
+    tokens.push_back(wrking);
+    
+    return tokens;
+}
+
+
 String init_req(String cmd){
-  String command = serverName + "/" +cmd;
+  String command = serverName + "/" +serial_code + "/" + cmd;
   return command;
 }
 
@@ -260,10 +309,32 @@ void change_LED_status(dock_status status){
       led_status.sign = 1;
       break;
     case (UNDOCKING):
-      led_status.pixel_var = 0;
-      led_status.sign = 1;
+    case (DOCKING):
+      for (int i = 0; i < num_pixels_strip1; i++){
+        if (i == 0){
+          led_status.vars[i] = 0;
+        }
+        else{
+          led_status.vars[i] = led_status.vars[i-1] + int(255/num_pixels_strip1);
+        }
+        if (status == UNDOCKING){
+          led_status.signs[i] = -1;
+        }
+        else if (status == DOCKING){
+          led_status.signs[i] = 1;
+        }
+
+      }
+      break;
+    case(NETWORK_ERROR):
     case (ERROR):
       led_status.pixel_var = 0;
       led_status.sign = 1;
+      break;
+    default:
+      Serial.print("Received Unknown status");
+      Serial.print(status);
+      Serial.println("switching to error mode");
+      change_LED_status(ERROR);
   }
 }
