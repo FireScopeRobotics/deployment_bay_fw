@@ -1,3 +1,7 @@
+
+#ifndef MAIN
+#define MAIN
+
 #include <Arduino.h>
 #include <ESP8266WiFi.h>        // Include the Wi-Fi library
 #include <ESP8266WiFiMulti.h>   // Include the Wi-Fi-Multi library
@@ -10,10 +14,9 @@
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
-
 //path to the server, change depending on the ip address of the server
 ESP8266WiFiMulti wifiMulti;     // Create an instance of the ESP8266WiFiMulti class, called 'wifiMulti'
-String serverName = "http://192.168.0.101:42069";
+String serverName = "http://192.168.137.196:42069";
 
 //pinout definitions
 #define LED 2
@@ -33,6 +36,8 @@ const char* ssid = "TP-LINK_783E72";
 const char* password = "24842488";
 const char* ssid2 = "Frank_Mesh";
 const char* password2 = "Llin2014";
+const char* ssid3 = "RCPLANE";
+const char* password3 = "12345678";
 
 bool LED_STATUS;
 
@@ -59,16 +64,17 @@ std::vector<std::string> spitString(std::string str, std::string key);
 
 //colorstrip
 #define CTRL_PIN1 4 //D2
+#define num_pixels_strip 28
 Adafruit_NeoPixel strip1 = Adafruit_NeoPixel(60, CTRL_PIN1, NEO_GRB + NEO_KHZ800); //32 lights
-#define num_pixels_strip1 32
-// #define CTRL_PIN2 4
-// Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(60, CTRL_PIN2, NEO_GRB + NEO_KHZ800);
+#define CTRL_PIN2 15
+Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(60, CTRL_PIN2, NEO_GRB + NEO_KHZ800);
 struct led_status_s{
   dock_status status;
   int pixel_var;
   int8_t sign;
-  int vars [num_pixels_strip1]; 
-  int8_t signs [num_pixels_strip1];
+  int vars [num_pixels_strip]; 
+  int8_t signs [num_pixels_strip];
 };
 led_status_s led_status;
+#endif
 

@@ -9,6 +9,7 @@ void setup() {
 
   wifiMulti.addAP(ssid, password);   // add Wi-Fi networks you want to connect to
   wifiMulti.addAP(ssid2, password2);   // add Wi-Fi networks you want to connect to
+  wifiMulti.addAP(ssid3, password3);   // add Wi-Fi networks you want to connect to
   Serial.println("Connecting ...");
 
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
@@ -55,8 +56,11 @@ void setup() {
   strip1.begin();
   strip1.setBrightness(64);
   strip1.show(); // Initialize all pixels to 'off'
-  // change_LED_status(IDLE);
-  change_LED_status(UNDOCKING);
+  strip2.begin();
+  strip2.setBrightness(64);
+  strip2.show(); // Initialize all pixels to 'off'
+  change_LED_status(IDLE);
+  // change_LED_status(UNDOCKING);
 
 
   //add tasks to scheduler
@@ -144,8 +148,9 @@ void ledstrip(){
 
   switch (led_status.status){
     case (IDLE):
-      for( int i=0; i < num_pixels_strip1; i++) {
+      for( int i=0; i < num_pixels_strip; i++) {
         strip1.setPixelColor(i, strip1.Color(0, 0, led_status.pixel_var));
+        strip2.setPixelColor(i, strip2.Color(0, 0, led_status.pixel_var));
       }
       led_status.pixel_var += 1*led_status.sign;
       if (led_status.pixel_var >= 255){
@@ -159,9 +164,10 @@ void ledstrip(){
     case (DOCKING):
     {
 
-      for( int i=0; i < num_pixels_strip1; i++) {
+      for( int i=0; i < num_pixels_strip; i++) {
         strip1.setPixelColor(i,  strip1.Color(0, led_status.vars[i], 0));
-        led_status.vars[i] += 255/num_pixels_strip1*led_status.signs[i]*2;
+        strip2.setPixelColor(i, strip2.Color(0, led_status.vars[i], 0));
+        led_status.vars[i] += 255/num_pixels_strip*led_status.signs[i]*2;
         if (led_status.vars[i] >= 255){
           led_status.signs[i] = -1;
           led_status.vars[i] = 255;
@@ -179,8 +185,9 @@ void ledstrip(){
     case (ERROR):
       int ticks = int(500/led_period);
       if (led_status.pixel_var > ticks){
-        for(int i=0; i< num_pixels_strip1; i++) {
+        for(int i=0; i< num_pixels_strip; i++) {
           strip1.setPixelColor(i, strip1.Color(125 + led_status.sign*125 , 0, 0));
+          strip2.setPixelColor(i, strip2.Color(125 + led_status.sign*125 , 0, 0));
         }
         led_status.pixel_var = 0;
         if (led_status.sign == 1) led_status.sign = -1;
@@ -191,6 +198,7 @@ void ledstrip(){
 
   }
   strip1.show();
+  strip2.show();
 }
 
 //helpers
@@ -237,12 +245,12 @@ void change_LED_status(dock_status status){
       break;
     case (UNDOCKING):
     case (DOCKING):
-      for (int i = 0; i < num_pixels_strip1; i++){
+      for (int i = 0; i < num_pixels_strip; i++){
         if (i == 0){
           led_status.vars[i] = 0;
         }
         else{
-          led_status.vars[i] = led_status.vars[i-1] + int(255/num_pixels_strip1);
+          led_status.vars[i] = led_status.vars[i-1] + int(255/num_pixels_strip);
         }
         if (status == UNDOCKING){
           led_status.signs[i] = -1;
