@@ -16,7 +16,7 @@
 #endif
 //path to the server, change depending on the ip address of the server
 ESP8266WiFiMulti wifiMulti;     // Create an instance of the ESP8266WiFiMulti class, called 'wifiMulti'
-String serverName = "http://192.168.137.196:42069";
+String serverName = "http://192.168.0.147:8000/dock";
 
 //pinout definitions
 #define LED 2
@@ -38,6 +38,8 @@ const char* ssid2 = "Frank_Mesh";
 const char* password2 = "Llin2014";
 const char* ssid3 = "RCPLANE";
 const char* password3 = "12345678";
+const char* ssid4 = "WifiAsta";
+const char* password4 = "Neige2020";
 
 bool LED_STATUS;
 
@@ -76,5 +78,21 @@ struct led_status_s{
   int8_t signs [num_pixels_strip];
 };
 led_status_s led_status;
+
+
+//motors related
+#define MOTORPIN1 9
+#define MOTORPIN2 10
+#define ENABLE  2
+
+#define SPDL 1024
+
+
+struct led_status_s{
+  bool DOOR_OPEN;
+  bool DOOR_OPERATING;
+  bool OPERATION; //(OPEN IS TRUE, CLOSE IS FALSE)
+};
+
 #endif
 

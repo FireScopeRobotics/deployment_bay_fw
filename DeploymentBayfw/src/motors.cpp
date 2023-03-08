@@ -1,29 +1,24 @@
-// #include <main.hpp>
+#include <main.hpp>
 
-// int motor1pin1 = 9;
-// int motor1pin2 = 10;
 
-// int enB = 13;
 
-// #define SPDL 128
+void setup_motors() {
+  // put your setup code here, to run once:
+  pinMode(MOTORPIN1, OUTPUT);
+  pinMode(MOTORPIN2, OUTPUT);
 
-// void setup() {
-//   // put your setup code here, to run once:
-//   pinMode(motor1pin1, OUTPUT);
-//   pinMode(motor1pin2, OUTPUT);
+  pinMode(ENABLE, OUTPUT);
+}
 
-//   pinMode(enB, OUTPUT);
-// }
+void run_motors() {
+  // put your main code here, to run repeatedly:   
 
-// void loop() {
-//   // put your main code here, to run repeatedly:   
+  //Controlling speed (0 = off and 255 = max speed):
+  analogWrite(ENABLE, SPDL); //ENB pin
 
-//   //Controlling speed (0 = off and 255 = max speed):
-//   analogWrite(enB, SPDL); //ENB pin
+  //Controlling spin direction of motors:
+  digitalWrite(MOTORPIN1, LOW);
+  digitalWrite(MOTORPIN2, HIGH);
 
-//   //Controlling spin direction of motors:
-//   digitalWrite(motor1pin1, LOW);
-//   digitalWrite(motor1pin2, HIGH);
-
-//   delay(1000);
-// }
+  delay(1000);
+}

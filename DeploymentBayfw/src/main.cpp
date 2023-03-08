@@ -10,6 +10,7 @@ void setup() {
   wifiMulti.addAP(ssid, password);   // add Wi-Fi networks you want to connect to
   wifiMulti.addAP(ssid2, password2);   // add Wi-Fi networks you want to connect to
   wifiMulti.addAP(ssid3, password3);   // add Wi-Fi networks you want to connect to
+  wifiMulti.addAP(ssid4, password4);   // add Wi-Fi networks you want to connect to
   Serial.println("Connecting ...");
 
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
@@ -71,7 +72,6 @@ void setup() {
   heartbeat_t.enable();
   ledstrip_t.enable();
 
-  LED_STATUS = HIGH;
 }
 
 void loop() {
@@ -107,14 +107,26 @@ void heartbeat(){
         Serial.println(payld.size());
         if (payld.size() > 1){
           std::vector tokens = spitString(payld, std::string("-"));
-        
+          Serial.print(tokens[0].c_str());
+          Serial.println(tokens[1].c_str());
           if (led_status.status == NETWORK_ERROR){
             change_LED_status(IDLE);
           }
 
-          if (tokens[0] == "OpenDoor"){
+          if (tokens[0] == "Door"){
+            if (tokens[1] == "Open" && !DOOR_OPEN){
+              //open door
+              DOOR_OPEN = true;
+            }
+            else if (tokens[1] == "Close" && DOOR_OPEN){
+              //close door
+              DOOR_OPEN = false;
+            }
+            else{
+              Serial.println("DOOR STATE ERROR");
+            }
           }
-          else if (tokens[0] == "SwtichLights"){
+          else if (tokens[0] == "SwitchLights"){
             Serial.println(tokens[1].size());
             Serial.println(tokens[1] == "IDLE");
             if (tokens[1] == "IDLE") {change_LED_status(IDLE); Serial.println("here");}
