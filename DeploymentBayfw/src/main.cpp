@@ -1,5 +1,23 @@
 #include <main.hpp>
+#include <motor.hpp>
 
+#include <Arduino.h>
+#include <ESP8266WiFi.h>        // Include the Wi-Fi library
+#include <ESP8266WiFiMulti.h>   // Include the Wi-Fi-Multi library
+#include <ESP8266HTTPClient.h>
+#include <WiFiClient.h>
+#include <TaskScheduler.h>
+#include <Adafruit_NeoPixel.h>
+#include <vector>
+#include <string>
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
+
+Task led_blink_t(400, TASK_FOREVER, &led_blink);
+Task heartbeat_t(600, TASK_FOREVER, &heartbeat);
+Task ledstrip_t(led_period, TASK_FOREVER, &ledstrip);
+Task motor_t(50, TASK_FOREVER, &run_motor);
 
 void setup() {
   // put your setup code here, to run once:
@@ -12,6 +30,7 @@ void setup() {
   wifiMulti.addAP(ssid3, password3);   // add Wi-Fi networks you want to connect to
   wifiMulti.addAP(ssid4, password4);   // add Wi-Fi networks you want to connect to
   Serial.println("Connecting ...");
+  WiFi.mode(WIFI_STA);
 
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
     delay(200);
@@ -63,15 +82,17 @@ void setup() {
   change_LED_status(IDLE);
   // change_LED_status(UNDOCKING);
 
+  init_motor();
 
   //add tasks to scheduler
   runner.addTask(led_blink_t);
   runner.addTask(heartbeat_t);
   runner.addTask(ledstrip_t);
+  runner.addTask(motor_t);
   led_blink_t.enable();
   heartbeat_t.enable();
   ledstrip_t.enable();
-
+  motor_t.enable();
 }
 
 void loop() {
@@ -114,15 +135,15 @@ void heartbeat(){
           }
 
           if (tokens[0] == "Door"){
-            if (tokens[1] == "Open" && !DOOR_OPEN){
-              //open door
-              DOOR_OPEN = true;
+            bool status = false;
+            if (tokens[1] == "Open"){
+              status = request_motor(true); //open door
             }
-            else if (tokens[1] == "Close" && DOOR_OPEN){
+            else if (tokens[1] == "Close"){
               //close door
-              DOOR_OPEN = false;
+              status = request_motor(false); //open door
             }
-            else{
+            if (status== false){
               Serial.println("DOOR STATE ERROR");
             }
           }

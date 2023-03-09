@@ -1,4 +1,3 @@
-
 #ifndef MAIN
 #define MAIN
 
@@ -11,12 +10,10 @@
 #include <Adafruit_NeoPixel.h>
 #include <vector>
 #include <string>
-#ifdef __AVR__
-  #include <avr/power.h>
-#endif
+
 //path to the server, change depending on the ip address of the server
 ESP8266WiFiMulti wifiMulti;     // Create an instance of the ESP8266WiFiMulti class, called 'wifiMulti'
-String serverName = "http://192.168.0.147:8000/dock";
+String serverName = "http://192.168.0.101:8000/dock";
 
 //pinout definitions
 #define LED 2
@@ -43,26 +40,11 @@ const char* password4 = "Neige2020";
 
 bool LED_STATUS;
 
-//tasks
-void led_blink(); //test/stayalive task
-Task led_blink_t(400, TASK_FOREVER, &led_blink);
-void heartbeat(); //heartbeat generater request receiver
-Task heartbeat_t(500, TASK_FOREVER, &heartbeat);
-void ledstrip();
-#define led_period 25
-Task ledstrip_t(led_period, TASK_FOREVER, &ledstrip);
-
 //fw variables
 String serial_code = "";
 
 //multitasking variables:
 Scheduler runner;
-
-//helper functions
-String init_req(String cmd);
-void add_param_req(String& cmd, String param, String val);
-void change_LED_status(dock_status status);
-std::vector<std::string> spitString(std::string str, std::string key);
 
 //colorstrip
 #define CTRL_PIN1 4 //D2
@@ -79,20 +61,18 @@ struct led_status_s{
 };
 led_status_s led_status;
 
-
-//motors related
-#define MOTORPIN1 9
-#define MOTORPIN2 10
-#define ENABLE  2
-
-#define SPDL 1024
+//tasks
+void led_blink(); //test/stayalive task
+void heartbeat(); //heartbeat generater request receiver
+void ledstrip();
+#define led_period 25
 
 
-struct led_status_s{
-  bool DOOR_OPEN;
-  bool DOOR_OPERATING;
-  bool OPERATION; //(OPEN IS TRUE, CLOSE IS FALSE)
-};
+//helper functions
+String init_req(String cmd);
+void add_param_req(String& cmd, String param, String val);
+void change_LED_status(dock_status status);
+std::vector<std::string> spitString(std::string str, std::string key);
 
 #endif
 

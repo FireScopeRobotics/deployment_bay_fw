@@ -3,8 +3,8 @@
 int motor1pin1 = 12;
 int motor1pin2 = 13;
 
-#define SPDL 1024
-#define ENABLE 14
+// #define SPDL 1024
+// #define ENABLE 14
 
 
 void setup() {
@@ -13,15 +13,15 @@ void setup() {
   pinMode(motor1pin1, OUTPUT);
   pinMode(motor1pin2, OUTPUT);
 
-  pinMode(ENABLE, OUTPUT);
+  // pinMode(ENABLE, OUTPUT);
 }
 
 void loop(){
   // put your main code here, to run repeatedly:   
-  Serial.print("RUN");
+  Serial.println("RUN");
 
   //Controlling speed (0 = off and 255 = max speed):
-  analogWrite(ENABLE, SPDL); //ENB pin
+  // analogWrite(ENABLE, SPDL); //ENB pin
   
 
   //Controlling spin direction of motors:
