@@ -13,8 +13,7 @@
 
 //path to the server, change depending on the ip address of the server
 ESP8266WiFiMulti wifiMulti;     // Create an instance of the ESP8266WiFiMulti class, called 'wifiMulti'
-String serverName = "http://192.168.0.101:8000/dock";
-
+static String serial_code = "";
 //pinout definitions
 #define LED 2
 
@@ -37,11 +36,12 @@ const char* ssid3 = "RCPLANE";
 const char* password3 = "12345678";
 const char* ssid4 = "WifiAsta";
 const char* password4 = "Neige2020";
+const char* ssid5 = "turtlebot24";
+const char* password5 = "tobeltrut";
+const char* ssid6 = "FrankPhone";
+const char* password6 = "12345678";
 
 bool LED_STATUS;
-
-//fw variables
-String serial_code = "";
 
 //multitasking variables:
 Scheduler runner;

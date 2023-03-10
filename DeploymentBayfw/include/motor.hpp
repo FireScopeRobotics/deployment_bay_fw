@@ -1,5 +1,6 @@
 #ifndef MOTOR
 #define MOTOR
+#include <Arduino.h>
 
 //motors related
 #define MOTORPIN1 12
@@ -12,6 +13,7 @@
 void init_motor();
 void run_motor();
 bool request_motor(bool is_request_open);
+void set_id_motor(String id);
 
 
 

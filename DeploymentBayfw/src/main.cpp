@@ -1,11 +1,8 @@
 #include <main.hpp>
 #include <motor.hpp>
+#include <wifi.hpp>
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>        // Include the Wi-Fi library
-#include <ESP8266WiFiMulti.h>   // Include the Wi-Fi-Multi library
-#include <ESP8266HTTPClient.h>
-#include <WiFiClient.h>
 #include <TaskScheduler.h>
 #include <Adafruit_NeoPixel.h>
 #include <vector>
@@ -29,6 +26,8 @@ void setup() {
   wifiMulti.addAP(ssid2, password2);   // add Wi-Fi networks you want to connect to
   wifiMulti.addAP(ssid3, password3);   // add Wi-Fi networks you want to connect to
   wifiMulti.addAP(ssid4, password4);   // add Wi-Fi networks you want to connect to
+  wifiMulti.addAP(ssid5, password5);   // add Wi-Fi networks you want to connect to
+  wifiMulti.addAP(ssid6, password6);   // add Wi-Fi networks you want to connect to
   Serial.println("Connecting ...");
   WiFi.mode(WIFI_STA);
 
@@ -60,7 +59,8 @@ void setup() {
         Serial.println(httpResponseCode);
         String payload = http.getString();
         Serial.println(payload);
-        serial_code = payload;
+        oo = payload;
+        set_id_motor(serial_code);
       }
       else{
         Serial.println(httpResponseCode);
